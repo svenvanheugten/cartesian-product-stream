@@ -117,21 +117,17 @@ namespace SmartCartesianProduct
                     _frozenLock.AcquireWriterLock(TimeSpan.FromDays(1));
                     _frozenFrozenLock.ReleaseLock();
                 }
-                
-                _frozenFrozenLock.ReleaseReaderLock();
             }
 
             public void Unfreeze()
             {
-                _frozenFrozenLock.AcquireReaderLock(TimeSpan.FromDays(1));
-
                 if (_frozenLock.IsWriterLockHeld)
                 {
                     _frozenFrozenLock.AcquireWriterLock(TimeSpan.FromDays(1));
                     _frozenLock.ReleaseWriterLock();
                     _frozenFrozenLock.ReleaseLock();
                 }
-                
+
                 _frozenFrozenLock.ReleaseReaderLock();
             }
         }
