@@ -114,7 +114,10 @@ namespace SmartCartesianProduct
                 if (!_frozenLock.IsWriterLockHeld)
                 {
                     _frozenFrozenLock.AcquireWriterLock(TimeSpan.FromDays(1));
-                    _frozenLock.AcquireWriterLock(TimeSpan.FromDays(1));
+                    if (!_frozenLock.IsWriterLockHeld)
+                    {
+                        _frozenLock.AcquireWriterLock(TimeSpan.FromDays(1));
+                    }
                     _frozenFrozenLock.ReleaseWriterLock();
                 }
             }
@@ -124,7 +127,10 @@ namespace SmartCartesianProduct
                 if (_frozenLock.IsWriterLockHeld)
                 {
                     _frozenFrozenLock.AcquireWriterLock(TimeSpan.FromDays(1));
-                    _frozenLock.ReleaseWriterLock();
+                    if (_frozenLock.IsWriterLockHeld)
+                    {
+                        _frozenLock.ReleaseWriterLock();
+                    }
                     _frozenFrozenLock.ReleaseWriterLock();
                 }
 
