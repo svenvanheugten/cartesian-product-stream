@@ -64,6 +64,7 @@ namespace SmartCartesianProduct
             public FreezableBag()
             {
                 _frozenLock = new ReaderWriterLock();
+                _frozenFrozenLock = new ReaderWriterLock();
                 _concurrentBags = new List<ConcurrentBag<int>>
                 {
                     new ConcurrentBag<int>()
