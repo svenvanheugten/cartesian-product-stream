@@ -57,12 +57,13 @@ namespace SmartCartesianProduct
         
         private class FreezableBag
         {
-            private readonly ReaderWriterLock _readerWriterLock;
+            private readonly ReaderWriterLock _frozenLock;
+            private readonly ReaderWriterLock _frozenFrozenLock;
             private readonly IList<ConcurrentBag<int>> _concurrentBags;
 
             public FreezableBag()
             {
-                _readerWriterLock = new ReaderWriterLock();
+                _frozenLock = new ReaderWriterLock();
                 _concurrentBags = new List<ConcurrentBag<int>>
                 {
                     new ConcurrentBag<int>()
@@ -71,14 +72,14 @@ namespace SmartCartesianProduct
 
             public void Add(int value)
             {
-                _readerWriterLock.AcquireReaderLock(TimeSpan.FromDays(1));
+                _frozenLock.AcquireReaderLock(TimeSpan.FromDays(1));
                 _concurrentBags[^1].Add(value);
-                _readerWriterLock.ReleaseReaderLock();
+                _frozenLock.ReleaseReaderLock();
             }
 
             public IEnumerable<int> GetSnapshot()
             {
-                if (!_readerWriterLock.IsWriterLockHeld)
+                if (!_frozenLock.IsWriterLockHeld)
                 {
                     throw new InvalidOperationException();
                 }
@@ -108,12 +109,30 @@ namespace SmartCartesianProduct
 
             public void Freeze()
             {
-                _readerWriterLock.AcquireWriterLock(TimeSpan.FromDays(1));
+                _frozenFrozenLock.AcquireReaderLock(TimeSpan.FromDays(1));
+
+                if (!_frozenLock.IsWriterLockHeld)
+                {
+                    _frozenFrozenLock.AcquireWriterLock(TimeSpan.FromDays(1));
+                    _frozenLock.AcquireWriterLock(TimeSpan.FromDays(1));
+                    _frozenFrozenLock.ReleaseLock();
+                }
+                
+                _frozenFrozenLock.ReleaseReaderLock();
             }
 
             public void Unfreeze()
             {
-                _readerWriterLock.ReleaseWriterLock();
+                _frozenFrozenLock.AcquireReaderLock(TimeSpan.FromDays(1));
+
+                if (_frozenLock.IsWriterLockHeld)
+                {
+                    _frozenFrozenLock.AcquireWriterLock(TimeSpan.FromDays(1));
+                    _frozenLock.ReleaseWriterLock();
+                    _frozenFrozenLock.ReleaseLock();
+                }
+                
+                _frozenFrozenLock.ReleaseReaderLock();
             }
         }
     }
